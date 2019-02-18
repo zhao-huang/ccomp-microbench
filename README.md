@@ -44,4 +44,18 @@ the results. To get a proper result you should:
  * If anyone improves the infrastructure or comes up with interesting new
    test programs, I would appreciate being provided with patches.
 
+bm1 just tests that a switch…case statement with values outside the range of the switch’d datatype are optimized away. gcc 3.4.6 doesn’t do this, which is why it compares badly against gcc 4.3.3 and 4.4.0 (which do).
+
+bm2 tests alias analysis of the compiler. It has a function which takes an argument pointer to a certain large structure s1, but then allocates space for a slightly smaller structure s2 on the stack (as a local variable). It copies memory (using memcpy) from s1 to s2, then makes a modification of one field of s2, before finally copying s2 back to s1. This could be optimized by just changing the field directly in s1 without doing the two memory copy operations; however, none of the tested compilers manage to do this.
+
+bm3 is like bm2, but the s2 structure is much smaller. Most compilers then seem to be able to perform decent optimization; gcc 4.3.3 notably fails.
+
+bm4 is a simple memory copy written using a while loop with two char pointers. It’s amazing how much difference there is between the different compilers. Notably, a simple hand-coded assembly “rep movsb” does way, way better than any of the compilers (0.036 seconds). [Edit 2012/2/29: That just can’t be right. Need to re-check].
+
+bm5 is a small testcase taken from a gcc PR. It contains branches and potential for common subexpression elimination; it probably puts some pressure on the register allocator. The regression affects gcc 4.3/4.4 series which is reflected in the benchmark results (gcc 3.4.6 really shines).
+
+bm6 is another gcc PR. It’s essentially testing common subexpression elimination in combination with loop invariant hoisting. gcc-3.4.6 does shockingly badly, but gcc-4.3.3 and gcc-4.4.0 still get whipped by llvm-2.5.
+
+bm7 calls a function which returns a (large) structure and passes the result straight into another function. The ABI allows for returning the structure directly into the stack location from which it is then used as a parameter, thus avoiding the need to copy the structure; however, not all compilers manage this.
+
 Davin McCall - davmac@davmac.org
