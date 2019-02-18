@@ -58,4 +58,10 @@ bm6 is another gcc PR. It’s essentially testing common subexpression eliminati
 
 bm7 calls a function which returns a (large) structure and passes the result straight into another function. The ABI allows for returning the structure directly into the stack location from which it is then used as a parameter, thus avoiding the need to copy the structure; however, not all compilers manage this.
 
+bm8 tests the compiler’s ability to remove trivial loops (loops with empty bodies, but a large number of iterations). The loops are implemented with “goto” rather than a C loop structure, and there is an inner and outer loop. No tested compiler manages to  remove the loops.
+
+bm9 tests the compiler’s ability to break up a loop into two separate loops, when doing so avoids an efficiency problem caused by a potential aliasing pointer. The function in the benchmark takes two arguments: an int array and an int pointer “p”. The inner part of the loop uses the value pointed at by “p” as part of an expression assigned to each array element in turn. Because “p” might alias one of the array elements, the stored value must be re-loaded each iteration, unless the compiler breaks the loop into two. None of the tested compilers perform this optimization.
+
+bm10 tests that a shift-left of a value inside a large loop can be reduced to a constant (due to having shifted all the bits out). None of the tested compilers manage this.
+
 Davin McCall - davmac@davmac.org
